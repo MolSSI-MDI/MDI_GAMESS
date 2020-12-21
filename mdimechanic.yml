@@ -1,0 +1,44 @@
+code_name: 'GAMESS'
+docker:
+  image_name: 'mdi/gamess'
+
+
+  build_image:
+    # Install dependencies
+    - apt-get update
+    - apt-get install -y rsync csh
+
+    - apt-get install -y patch wget nano make gcc gfortran
+    - pip install jinja2
+
+  build_engine:
+    # Copy GAMESS source files into the build directory
+    - mkdir -p build
+    - rsync -a source/gamess build
+    - cd build/gamess
+
+    # Prepare install.info
+    - export GCC_MAJOR_VERSION=`gcc --version | grep ^gcc | sed 's/gcc (.*) //g' | grep -o '[0-9]\{1,3\}\.[0-9]\{0,3\}\.[0-9]\{0,3\}' | cut -d '.' -f 1`
+    - export GCC_MINOR_VERSION=`gcc --version | grep ^gcc | sed 's/gcc (.*) //g' | grep -o '[0-9]\{1,3\}\.[0-9]\{0,3\}\.[0-9]\{0,3\}' | cut -d '.' -f 2`
+    - export NUM_CPU_CORES=`grep -c ^processor /proc/cpuinfo`
+    - python bin/create-install-info.py --fortran_version ${GCC_MAJOR_VERSION}.${GCC_MINOR_VERSION}
+
+    # Generate Makefile
+    - export builddir=$(pwd)
+    - echo "GMS_PATH = ${builddir}" > Makefile
+    - echo "GMS_VERSION = 00" >> Makefile
+    - echo "GMS_BUILD_PATH = ${builddir}" >> Makefile
+    - echo 'include $(GMS_PATH)/Makefile.in' >> Makefile
+
+    # Build GAMESS
+    - make -j $NUM_CPU_CORES
+
+
+  validate_engine:
+    - echo "Insert code that will confirm that your code has been built successfully"
+
+
+engine_tests:
+  # Provide at least one example input that can be used to test your code's MDI functionality
+  - script:
+      - echo "Insert commands to run an example calculation here"
