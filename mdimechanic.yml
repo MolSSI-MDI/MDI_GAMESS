@@ -33,9 +33,27 @@ docker:
     # Build GAMESS
     - make -j $NUM_CPU_CORES
 
+    # Fix GAMESS run script
+    - sed -i 's/set SCR=\/scr1\/$USER/set SCR=\/repo\/tests\/scratch/g' /repo/build/gamess/rungms
+    - sed -i 's/set USERSCR=~\/gamess-devv/set USERSCR=\/repo\/tests\/scratch\/userscr/g' /repo/build/gamess/rungms
+    - sed -i 's/set GMSPATH=~\/gamess-devv/set GMSPATH=\/repo\/build\/gamess/g' /repo/build/gamess/rungms
 
   validate_engine:
     - echo "Insert code that will confirm that your code has been built successfully"
+    - export USER=MDIMECHANIC
+    - rm -r tests/scratch
+    - mkdir -p tests/scratch
+    - mkdir -p tests/scratch/userscr
+
+    # These files are created to ensure that the rungms script doesn't return a non-zero exit code
+    - cd tests/scratch
+    - touch TEST-mdi.cube
+    - touch TEST-mdi.grd
+    - touch TEST-mdi.csv
+    - cd ../../
+
+    - cd tests/validate_engine
+    - csh -e ../../build/gamess/rungms TEST.inp 00 1 > TEST.log 2> TEST.err
 
 
 engine_tests:
