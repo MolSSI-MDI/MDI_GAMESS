@@ -56,6 +56,14 @@ docker:
     - csh -e ../../build/gamess/rungms TEST.inp 00 1 > TEST.log 2> TEST.err
 
 
+report:
+  prepend:
+    - "## Usage Instructions"
+    - 
+    - This repo does not include a distribution of the GAMESS software package; users must acquire the source code of GAMESS seperately.
+    - The GAMESS source code must then be copied into a `source/gamess` subdirectory within this repository.
+    - Afterwords, the repo can be built using the `mdimechanic build` and `mdimechanic report` commands.
+
 engine_tests:
   # Provide at least one example input that can be used to test your code's MDI functionality
   - script:

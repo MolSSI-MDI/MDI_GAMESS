@@ -4,6 +4,13 @@ This repo presents test results for the MDI interface implementation in the GAME
 
 To view the README.md offline, it is suggested that you use grip (i.e., pip install grip).
 
+[yaml]: <> ( prepend )
+## Usage Instructions
+
+This repo does not include a distribution of the GAMESS software package; users must acquire the source code of GAMESS seperately.
+The GAMESS source code must then be copied into a `source/gamess` subdirectory within this repository.
+Afterwords, the repo can be built using the `mdimechanic build` and `mdimechanic report` commands.
+
 ## Overview of steps
 
 The following lists the basic steps required to run a MDI calculation.
