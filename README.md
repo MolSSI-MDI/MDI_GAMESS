@@ -11,7 +11,7 @@ This repo does not include a distribution of the GAMESS software package; users 
 The GAMESS source code must then be copied into a `source/gamess` subdirectory within this repository.
 Afterwords, the repo can be built using the `mdimechanic build` and `mdimechanic report` commands.
 
-## MDI Health
+## Basic Functionality Tests
 
 This section provides the results of several tests performed by MDI Mechanic that are intended to verify that this engine meets the most basic requirements of MDI.
 Any functioning MDI engine must successfully pass all of these tests.
@@ -25,7 +25,7 @@ If all of these tests are succussfull, developers are encouraged to begin implem
 [comment]: <> (curl https://img.shields.io/badge/-working-success --output report/badges/-working-success.svg)
 
 1. [![validate_engine](report/dynamic_badges/step_engine_build.svg)](mdimechanic.yml) The engine builds successfully
-2. [![min_mdi](report/dynamic_badges/step_min_engine.svg)](mdimechanic.yml) The engine supports minimalistic MDI functionality
+2. [![min_mdi](report/dynamic_badges/step_min_engine.svg)](report/markdown/minimalistic.md) The engine supports minimalistic MDI communication
 3. [![errors_correctly](report/dynamic_badges/step_unsupported.svg)](mdimechanic.yml) The engine correctly responds to unsupported MDI commands
 4. [![completed_analysis](report/dynamic_badges/step_mdi_nodes.svg)](mdimechanic.yml) Full analysis of the engine's supported nodes and commands is available
 
