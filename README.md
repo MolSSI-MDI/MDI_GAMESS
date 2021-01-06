@@ -2,7 +2,7 @@
 
 This repo presents test results for the MDI interface implementation in the GAMESS code.
 
-To view the README.md offline, it is suggested that you use grip (i.e., pip install grip).
+To view the README.md offline, it is suggested that you use grip (i.e., `pip install grip`).
 
 [yaml]: <> ( prepend )
 ## Usage Instructions
@@ -11,10 +11,15 @@ This repo does not include a distribution of the GAMESS software package; users 
 The GAMESS source code must then be copied into a `source/gamess` subdirectory within this repository.
 Afterwords, the repo can be built using the `mdimechanic build` and `mdimechanic report` commands.
 
-## Overview of steps
+## MDI Health
 
-The following lists the basic steps required to run a MDI calculation.
-MDI Mechanic will automatically test each of these steps and indicate whether each one is currently working or not.
+This section provides the results of several tests performed by MDI Mechanic that are intended to verify that this engine meets the most basic requirements of MDI.
+Any functioning MDI engine must successfully pass all of these tests.
+The tests are performed in the listed order, and a failure for one test causes all subsequent tests to be skipped and marked as failed.
+
+Developers seeking to implement or maintain MDI support in an engine should resolve the first failed test (if any) and then generate a new report in order to confirm that the test is passed successfully.
+Additional information about each test, as well as advice on how to resolve a test if it fails, can be obtained by clicking the test's status badge.
+If all of these tests are succussfull, developers are encouraged to begin implementing support for any additional MDI nodes and MDI commands that are appropriate for the engine.
 
 [comment]: <> (Badges are downloaded from shields.io, i.e.:)
 [comment]: <> (curl https://img.shields.io/badge/-working-success --output report/badges/-working-success.svg)
@@ -22,13 +27,13 @@ MDI Mechanic will automatically test each of these steps and indicate whether ea
 1. [![validate_engine](report/dynamic_badges/step_engine_build.svg)](mdimechanic.yml) The engine builds successfully
 2. [![min_mdi](report/dynamic_badges/step_min_engine.svg)](mdimechanic.yml) The engine supports minimalistic MDI functionality
 3. [![errors_correctly](report/dynamic_badges/step_unsupported.svg)](mdimechanic.yml) The engine correctly responds to unsupported MDI commands
-4. [![completed_analysis](report/dynamic_badges/step_mdi_nodes.svg)](mdimechanic.yml) Full analysis of the engine's supported nodes and commands was completed
+4. [![completed_analysis](report/dynamic_badges/step_mdi_nodes.svg)](mdimechanic.yml) Full analysis of the engine's supported nodes and commands is available
 
 ## Nodes
 
 The graph indicates which nodes have been implemented in this engine and the connections between them.
 
-![command](report/graphs/node-report.gv.svg)
+![node_graph](report/graphs/node-report.gv.svg)
 
 ## Commands
 
