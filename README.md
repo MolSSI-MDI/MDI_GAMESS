@@ -19,10 +19,10 @@ MDI Mechanic will automatically test each of these steps and indicate whether ea
 [comment]: <> (Badges are downloaded from shields.io, i.e.:)
 [comment]: <> (curl https://img.shields.io/badge/-working-success --output report/badges/-working-success.svg)
 
-1. [![validate_engine](report/dynamic_badges/step_engine_build.svg)](mdimechanic.yml)
-2. ![step5](report/dynamic_badges/step_min_engine.svg) Implement minimalistic MDI functionality
-3. ![step6](report/dynamic_badges/step_unsupported.svg) Correctly respond to unsupported commands
-4. ![step8](report/dynamic_badges/step_mdi_nodes.svg) Continue to add support for more MDI commands
+1. [![validate_engine](report/dynamic_badges/step_engine_build.svg)](mdimechanic.yml) The engine builds successfully
+2. [![min_mdi](report/dynamic_badges/step_min_engine.svg)](mdimechanic.yml) The engine supports minimalistic MDI functionality
+3. [![errors_correctly](report/dynamic_badges/step_unsupported.svg)](mdimechanic.yml) The engine correctly responds to unsupported MDI commands
+4. [![completed_analysis](report/dynamic_badges/step_mdi_nodes.svg)](mdimechanic.yml) Full analysis of the engine's supported nodes and commands was completed
 
 ## Nodes
 
