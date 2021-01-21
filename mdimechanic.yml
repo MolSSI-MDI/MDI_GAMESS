@@ -52,6 +52,10 @@ docker:
   validate_engine:
     - echo "Insert code that will confirm that your code has been built successfully"
     - export USER=MDIMECHANIC
+    - |
+      if [ -d "tests/scratch" ] ; then
+        rm -r tests/scratch
+      fi
     - mkdir -p tests/scratch
     - mkdir -p tests/scratch/userscr
 
