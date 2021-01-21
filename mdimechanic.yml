@@ -37,8 +37,12 @@ docker:
     # Build the MDI Library
     - make -j $NUM_CPU_CORES libmdi
 
+    # Build DDI
+    - make -j 1 ddi
+
     # Build GAMESS
     - make -j $NUM_CPU_CORES
+    #- make -j 1
 
     # Fix GAMESS run script
     - sed -i 's/set SCR=\/scr1\/$USER/set SCR=\/repo\/tests\/scratch/g' /repo/build/gamess/rungms
@@ -48,7 +52,6 @@ docker:
   validate_engine:
     - echo "Insert code that will confirm that your code has been built successfully"
     - export USER=MDIMECHANIC
-    - rm -r tests/scratch
     - mkdir -p tests/scratch
     - mkdir -p tests/scratch/userscr
 
