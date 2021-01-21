@@ -8,7 +8,7 @@ docker:
     - apt-get update
     - apt-get install -y rsync csh
 
-    - apt-get install -y patch wget nano make gcc gfortran
+    - apt-get install -y patch wget nano make gcc gfortran cmake
     - pip install jinja2
 
   build_engine:
@@ -28,7 +28,14 @@ docker:
     - echo "GMS_PATH = ${builddir}" > Makefile
     - echo "GMS_VERSION = 00" >> Makefile
     - echo "GMS_BUILD_PATH = ${builddir}" >> Makefile
+    - echo "GMS_FC = gfortran" >> Makefile
+    - echo "GMS_CC = gcc" >> Makefile
+    - echo "GMS_MDI = true" >> Makefile
+    - export GMS_MDI=true
     - echo 'include $(GMS_PATH)/Makefile.in' >> Makefile
+
+    # Build the MDI Library
+    - make -j $NUM_CPU_CORES libmdi
 
     # Build GAMESS
     - make -j $NUM_CPU_CORES
