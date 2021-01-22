@@ -23,7 +23,7 @@ docker:
     - export NUM_CPU_CORES=`grep -c ^processor /proc/cpuinfo`
     - python bin/create-install-info.py --fortran_version ${GCC_MAJOR_VERSION}.${GCC_MINOR_VERSION}
 
-    # Generate Makefile
+    # Generate the Makefile
     - export builddir=$(pwd)
     - echo "GMS_PATH = ${builddir}" > Makefile
     - echo "GMS_VERSION = 00" >> Makefile
@@ -32,6 +32,13 @@ docker:
     - echo "GMS_CC = gcc" >> Makefile
     - echo "GMS_MDI = true" >> Makefile
     - export GMS_MDI=true
+
+    # Set MPI Makefile options
+    - echo "setenv GMS_DDI_COMM   mpi" >> install.info
+    - echo "setenv GMS_MPI_LIB    mpich" >> install.info
+    - echo "setenv GMS_MPI_PATH   /usr/lib/x86_64-linux-gnu/mpich" >> install.info
+
+    # Finish generating the Makefile
     - echo 'include $(GMS_PATH)/Makefile.in' >> Makefile
 
     # Build the MDI Library
@@ -42,12 +49,16 @@ docker:
 
     # Build GAMESS
     - make -j $NUM_CPU_CORES
-    #- make -j 1
 
-    # Fix GAMESS run script
+    # Set path options in rungms
     - sed -i 's/set SCR=\/scr1\/$USER/set SCR=\/repo\/tests\/scratch/g' /repo/build/gamess/rungms
     - sed -i 's/set USERSCR=~\/gamess-devv/set USERSCR=\/repo\/tests\/scratch\/userscr/g' /repo/build/gamess/rungms
     - sed -i 's/set GMSPATH=~\/gamess-devv/set GMSPATH=\/repo\/build\/gamess/g' /repo/build/gamess/rungms
+
+    # Set MPI options for rungms
+    - sed -i 's/set TARGET=sockets/set TARGET=mpi/g' /repo/build/gamess/rungms
+    - sed -i 's/set DDI_MPI_CHOICE=impi/set DDI_MPI_CHOICE=mpich/g' /repo/build/gamess/rungms
+
 
   validate_engine:
     - echo "Insert code that will confirm that your code has been built successfully"
@@ -67,7 +78,7 @@ docker:
     - cd ../../
 
     - cd tests/validate_engine
-    - csh -e ../../build/gamess/rungms TEST.inp 00 1 > TEST.log 2> TEST.err
+    - csh -e ../../build/gamess/rungms TEST.inp 00 2 2 > TEST.log 2> TEST.err
 
 
 report:
