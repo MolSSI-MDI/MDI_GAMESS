@@ -110,3 +110,9 @@ engine_tests:
 
       - cd tests/validate_engine
       - mpiexec -n 1 csh -e ../../build/gamess/rungms -mdi "${MDI_OPTIONS}" TEST.inp 00 2 2 > TEST.log 2> TEST.err
+
+test_drivers:
+  mytest:
+    script:
+      - cd tests/drivers/mytest
+      - python mytest.py
