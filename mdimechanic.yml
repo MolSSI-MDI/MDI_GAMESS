@@ -21,7 +21,7 @@ docker:
     - export GCC_MAJOR_VERSION=`gcc --version | grep ^gcc | sed 's/gcc (.*) //g' | grep -o '[0-9]\{1,3\}\.[0-9]\{0,3\}\.[0-9]\{0,3\}' | cut -d '.' -f 1`
     - export GCC_MINOR_VERSION=`gcc --version | grep ^gcc | sed 's/gcc (.*) //g' | grep -o '[0-9]\{1,3\}\.[0-9]\{0,3\}\.[0-9]\{0,3\}' | cut -d '.' -f 2`
     - export NUM_CPU_CORES=`grep -c ^processor /proc/cpuinfo`
-    - python bin/create-install-info.py --fortran_version ${GCC_MAJOR_VERSION}.${GCC_MINOR_VERSION}
+    - python bin/create-install-info.py --fortran_version ${GCC_MAJOR_VERSION}.${GCC_MINOR_VERSION} --mdi --mpich --mpi --mpi_path /usr/lib/x86_64-linux-gnu/mpich
 
     # Generate the Makefile
     - export builddir=$(pwd)
@@ -32,13 +32,6 @@ docker:
     - echo "GMS_CC = gcc" >> Makefile
     - echo "GMS_MDI = true" >> Makefile
     - export GMS_MDI=true
-
-    # Set MPI Makefile options
-    - echo "setenv GMS_DDI_COMM   mpi" >> install.info
-    - echo "setenv GMS_MPI_LIB    mpich" >> install.info
-    - echo "setenv GMS_MPI_PATH   /usr/lib/x86_64-linux-gnu/mpich" >> install.info
-
-    # Finish generating the Makefile
     - echo 'include $(GMS_PATH)/Makefile.in' >> Makefile
 
     # Build the MDI Library

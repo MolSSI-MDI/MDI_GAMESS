@@ -60,11 +60,6 @@ if my_rank == 0:
     energy = mdi.MDI_Recv(1, mdi.MDI_DOUBLE, mdi_comm)
     print("PE:      " + str(energy))
 
-    # <PE_ELEC
-    mdi.MDI_Send_Command("<PE_ELEC", mdi_comm)
-    energy = mdi.MDI_Recv(1, mdi.MDI_DOUBLE, mdi_comm)
-    print("PE_ELEC: " + str(energy))
-
     # <DIMENSIONS
     mdi.MDI_Send_Command("<DIMENSIONS", mdi_comm)
     dimensions = mdi.MDI_Recv(3, mdi.MDI_INT, mdi_comm)
@@ -99,6 +94,9 @@ if my_rank == 0:
     print("ELEMENTS: " + str(elements))
 
     # <FORCES
+    mdi.MDI_Send_Command("<FORCES", mdi_comm)
+    forces = mdi.MDI_Recv(3 * natoms, mdi.MDI_DOUBLE, mdi_comm)
+    print("FORCES: " + str(forces))
 
     # EXIT
     mdi.MDI_Send_Command("EXIT", mdi_comm)
