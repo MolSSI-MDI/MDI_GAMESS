@@ -144,3 +144,7 @@ docker/.temp
 
 # GAMESS-specific files
 source/
+
+# Testing files
+tests/scratch/
+tests/validate_engine/TEST.err
