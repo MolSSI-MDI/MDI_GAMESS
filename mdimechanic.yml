@@ -84,25 +84,25 @@ report:
 
 engine_tests:
   # Provide at least one example input that can be used to test your code's MDI functionality
-  - script:
-      - echo "Insert commands to run an example calculation here"
-      - export USER=MDIMECHANIC
-      - |
-        if [ -d "tests/scratch" ] ; then
-          rm -r tests/scratch
-        fi
-      - mkdir -p tests/scratch
-      - mkdir -p tests/scratch/userscr
+  script:
+    - echo "Insert commands to run an example calculation here"
+    - export USER=MDIMECHANIC
+    - |
+      if [ -d "tests/scratch" ] ; then
+        rm -r tests/scratch
+      fi
+    - mkdir -p tests/scratch
+    - mkdir -p tests/scratch/userscr
 
-      # These files are created to ensure that the rungms script doesn't return a non-zero exit code
-      - cd tests/scratch
-      - touch TEST-mdi.cube
-      - touch TEST-mdi.grd
-      - touch TEST-mdi.csv
-      - cd ../../
+    # These files are created to ensure that the rungms script doesn't return a non-zero exit code
+    - cd tests/scratch
+    - touch TEST-mdi.cube
+    - touch TEST-mdi.grd
+    - touch TEST-mdi.csv
+    - cd ../../
 
-      - cd tests/validate_engine
-      - mpiexec -n 1 csh -e ../../build/gamess/rungms -mdi "${MDI_OPTIONS}" TEST.inp 00 2 2 > TEST.log 2> TEST.err
+    - cd tests/validate_engine
+    - mpiexec -n 1 csh -e ../../build/gamess/rungms -mdi "${MDI_OPTIONS}" TEST.inp 00 2 2 > TEST.log 2> TEST.err
 
 test_drivers:
   mytest:
