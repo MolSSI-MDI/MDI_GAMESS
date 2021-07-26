@@ -19,10 +19,10 @@ else:
 
 # Iniitalize MDI
 mdi_options = "-role DRIVER -name driver -method TCP -port 8021"
-mdi.MDI_Init(mdi_options, world_comm)
+mdi.MDI_Init(mdi_options)
 
 # Set world_comm to the correct intra-code MPI communicator
-world_comm = mdi.MDI_Get_Intra_Code_MPI_Comm()
+world_comm = mdi.MDI_MPI_get_world_comm()
 
 # Get the MPI rank of this process
 if world_comm is not None:

@@ -109,3 +109,9 @@ test_drivers:
     script:
       - cd tests/drivers/mytest
       - python mytest.py
+
+      # Output data from the engine
+      #- cd ../../../tests/validate_engine
+      #- echo "==================== ENGINE OUTPUT ===================="
+      #- cat TEST.log
+      #- echo "======================================================="
