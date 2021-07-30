@@ -6,10 +6,18 @@ docker:
   build_image:
     # Install dependencies
     - apt-get update
-    - apt-get install -y rsync csh
+    - apt-get install -y rsync csh wget groff
 
     - apt-get install -y patch wget nano make gcc gfortran cmake
     - pip install jinja2
+
+    # Install ftnchek
+    - wget ftnchek-3.3.1.tar.gz https://www.dsm.fordham.edu/~ftnchek/download/ftnchek-3.3.1.tar.gz || true
+    - tar -zxvf ftnchek-3.3.1.tar.gz
+    - cd ftnchek-3.3.1
+    - ./configure
+    - make
+    - make install
 
   build_engine:
     # Copy GAMESS source files into the build directory
@@ -51,6 +59,12 @@ docker:
     # Set MPI options for rungms
     - sed -i 's/set TARGET=sockets/set TARGET=mpi/g' /repo/build/gamess/rungms
     - sed -i 's/set DDI_MPI_CHOICE=impi/set DDI_MPI_CHOICE=mpich/g' /repo/build/gamess/rungms
+
+    # Run FTNCHEK to check for any errors in the MDI code
+    - echo "=================== CHECKGMS OUTPUT ==================="
+    - cd /repo/build/gamess/source
+    - ftnchek -noextern -common=2 -arguments=1 -array=0 -calltree=0 -nocrossref -portability=tab -f77=automatic-array,relops,cycle-exit,case-construct modmdi.src
+    - echo "======================================================="
 
 
   validate_engine:
