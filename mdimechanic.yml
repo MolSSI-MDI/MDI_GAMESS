@@ -61,10 +61,22 @@ docker:
     - sed -i 's/set DDI_MPI_CHOICE=impi/set DDI_MPI_CHOICE=mpich/g' /repo/build/gamess/rungms
 
     # Run FTNCHEK to check for any errors in the MDI code
-    - echo "=================== CHECKGMS OUTPUT ==================="
-    - cd /repo/build/gamess/source
-    - ftnchek -noextern -common=2 -arguments=1 -array=0 -calltree=0 -nocrossref -portability=tab -f77=automatic-array,relops,cycle-exit,case-construct modmdi.src
-    - echo "======================================================="
+    #- echo "=================== CHECKGMS OUTPUT ==================="
+    #- cd /repo/build/gamess/source
+    #- ftnchek -noextern -common=2 -arguments=1 -array=0 -calltree=0 -nocrossref -portability=tab -f77=automatic-array,relops,cycle-exit,case-construct modmdi.src
+    #- echo "======================================================="
+    #- cd /repo
+
+    # Run the tests
+    - cd /repo/build/gamess
+    - echo "Running serial tests"
+    - tests/runtest.py -n 1 --folder travis-ci --skip_folder travis-ci/parallel --stderr
+    - echo "Running parallel tests"
+    - tests/runtest.py -n 2 --folder travis-ci/parallel --stderr
+    - echo "Checking tests"
+    - cd tests
+    - ./checkgms.py
+    - echo "Finished tests"
 
 
   validate_engine:
