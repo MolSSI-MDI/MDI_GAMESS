@@ -6,7 +6,7 @@ docker:
   build_image:
     # Install dependencies
     - apt-get update
-    - apt-get install -y rsync csh wget groff
+    - apt-get install -y rsync csh wget groff curl
 
     - apt-get install -y patch wget nano make gcc gfortran cmake
     - pip install jinja2
@@ -43,6 +43,7 @@ docker:
     - echo 'include $(GMS_PATH)/Makefile.in' >> Makefile
 
     # Build the MDI Library
+    - ./tools/mdi/download-mdi.csh
     - make -j $NUM_CPU_CORES libmdi
 
     # Build DDI
@@ -68,15 +69,15 @@ docker:
     #- cd /repo
 
     # Run the tests
-    - cd /repo/build/gamess
-    - echo "Running serial tests"
-    - tests/runtest.py -n 1 --folder travis-ci --skip_folder travis-ci/parallel --stderr
-    - echo "Running parallel tests"
-    - tests/runtest.py -n 2 --folder travis-ci/parallel --stderr
-    - echo "Checking tests"
-    - cd tests
-    - ./checkgms.py
-    - echo "Finished tests"
+    #- cd /repo/build/gamess
+    #- echo "Running serial tests"
+    #- tests/runtest.py -n 1 --folder travis-ci --skip_folder travis-ci/parallel --stderr
+    #- echo "Running parallel tests"
+    #- tests/runtest.py -n 2 --folder travis-ci/parallel --stderr
+    #- echo "Checking tests"
+    #- cd tests
+    #- ./checkgms.py
+    #- echo "Finished tests"
 
 
   validate_engine:
