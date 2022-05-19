@@ -6,7 +6,7 @@ docker:
   build_image:
     # Install dependencies
     - apt-get update
-    - apt-get install -y rsync csh wget groff curl
+    - apt-get install -y rsync csh wget groff curl git
 
     - apt-get install -y patch wget nano make gcc gfortran cmake
     - pip install jinja2
@@ -22,7 +22,16 @@ docker:
   build_engine:
     # Copy GAMESS source files into the build directory
     - mkdir -p build
-    - rsync -a source/gamess build
+    - |
+      if [ ! -d "build/gamess" ] ; then
+        rsync -a source/gamess build
+        cd build/gamess
+    
+        # Ensure the line endings are lf
+        git rm --cached -r .
+        git reset --hard
+        cd ../../
+      fi
     - cd build/gamess
 
     # Prepare install.info
@@ -50,12 +59,12 @@ docker:
     - make -j 1 ddi
 
     # Build GAMESS
-    - make -j $NUM_CPU_CORES
+    - make -j 1
 
     # Set path options in rungms
-    - sed -i 's/set SCR=\/scr1\/$USER/set SCR=\/repo\/tests\/scratch/g' /repo/build/gamess/rungms
-    - sed -i 's/set USERSCR=~\/gamess-devv/set USERSCR=\/repo\/tests\/scratch\/userscr/g' /repo/build/gamess/rungms
-    - sed -i 's/set GMSPATH=~\/gamess-devv/set GMSPATH=\/repo\/build\/gamess/g' /repo/build/gamess/rungms
+    - sed -i 's/set SCR=~\/gamess\/restart/set SCR=\/repo\/tests\/scratch/g' /repo/build/gamess/rungms
+    - sed -i 's/set USERSCR=~\/gamess\/restart/set USERSCR=\/repo\/tests\/scratch\/userscr/g' /repo/build/gamess/rungms
+    - sed -i 's/set GMSPATH=~\/gamess/set GMSPATH=\/repo\/build\/gamess/g' /repo/build/gamess/rungms
 
     # Set MPI options for rungms
     - sed -i 's/set TARGET=sockets/set TARGET=mpi/g' /repo/build/gamess/rungms
