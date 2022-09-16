@@ -51,6 +51,10 @@ docker:
     - export GMS_MDI=true
     - echo 'include $(GMS_PATH)/Makefile.in' >> Makefile
 
+    # Build LAPACK
+    - ./tools/lapack/download-lapack.csh
+    - make -j $NUM_CPU_CORES lapack
+
     # Build the MDI Library
     - ./tools/mdi/download-mdi.csh
     - make -j $NUM_CPU_CORES libmdi
@@ -62,12 +66,15 @@ docker:
     - make -j 1
 
     # Set path options in rungms
-    - sed -i 's/set SCR=~\/gamess\/restart/set SCR=\/repo\/tests\/scratch/g' /repo/build/gamess/rungms
-    - sed -i 's/set USERSCR=~\/gamess\/restart/set USERSCR=\/repo\/tests\/scratch\/userscr/g' /repo/build/gamess/rungms
-    - sed -i 's/set GMSPATH=~\/gamess/set GMSPATH=\/repo\/build\/gamess/g' /repo/build/gamess/rungms
+    #- sed -i 's/set SCR=~\/gamess\/restart/set SCR=\/repo\/tests\/scratch/g' /repo/build/gamess/rungms
+    - sed -i -z 's/set SCR=\n/set SCR=\/repo\/tests\/scratch\n/g' /repo/build/gamess/rungms
+    #- sed -i 's/set USERSCR=~\/gamess\/restart/set USERSCR=\/repo\/tests\/scratch\/userscr/g' /repo/build/gamess/rungms
+    - sed -i -z 's/set USERSCR=\n/set USERSCR=\/repo\/tests\/scratch\/userscr\n/g' /repo/build/gamess/rungms
+    #- sed -i 's/set GMSPATH=~\/gamess/set GMSPATH=\/repo\/build\/gamess/g' /repo/build/gamess/rungms
+    - sed -i -z 's/set GMSPATH=\n/set GMSPATH=\/repo\/build\/gamess\n/g' /repo/build/gamess/rungms
 
     # Set MPI options for rungms
-    - sed -i 's/set TARGET=sockets/set TARGET=mpi/g' /repo/build/gamess/rungms
+    - sed -i -z 's/\nset TARGET=\n/\nset TARGET=mpi\n/g' /repo/build/gamess/rungms
     - sed -i 's/set DDI_MPI_CHOICE=impi/set DDI_MPI_CHOICE=mpich/g' /repo/build/gamess/rungms
 
     # Run FTNCHEK to check for any errors in the MDI code
@@ -90,23 +97,45 @@ docker:
 
 
   validate_engine:
-    - echo "Insert code that will confirm that your code has been built successfully"
+    - echo "Starting GAMESS validate_engine script"
     - export USER=MDIMECHANIC
+
+    - echo "Removing GAMESS scratch directory"
     - |
-      if [ -d "tests/scratch" ] ; then
-        rm -r tests/scratch
+      if [ -d "/repo/tests/scratch" ] ; then
+        rm -r /repo/tests/scratch
       fi
-    - mkdir -p tests/scratch
-    - mkdir -p tests/scratch/userscr
+
+    - echo "Creating GAMESS scratch directory"
+    - mkdir -p /repo/tests/scratch
+    - mkdir -p /repo/tests/scratch/userscr
 
     # These files are created to ensure that the rungms script doesn't return a non-zero exit code
-    - cd tests/scratch
+    - echo "Creating GAMESS scratch files"
+    - cd /repo/tests/scratch
     - touch TEST-mdi.cube
     - touch TEST-mdi.grd
     - touch TEST-mdi.csv
-    - cd ../../
+    - touch /repo/tests/scratch/userscr/TEST.casino
+    - touch /repo/tests/scratch/userscr/TEST.dmn
+    - touch /repo/tests/scratch/userscr/TEST.cim
+    - touch /repo/tests/scratch/userscr/TEST.cosmo
+    - touch /repo/tests/scratch/userscr/TEST.pot
+    - touch /repo/tests/scratch/userscr/TEST.gamma
+    - touch /repo/tests/scratch/userscr/TEST.efp
+    - touch /repo/tests/scratch/userscr/TEST.dip
+    - touch /repo/tests/scratch/userscr/TEST.hs1
+    - touch /repo/tests/scratch/userscr/TEST.hs2
+    - touch /repo/tests/scratch/userscr/TEST.dat
+    - touch /repo/tests/scratch/userscr/TEST.qmw
+    - touch /repo/tests/scratch/userscr/TEST.rst
+    - touch /repo/tests/scratch/userscr/TEST.trj
 
-    - cd tests/validate_engine
+    - cp /repo/build/gamess/install.info /install.info
+    - export GMSPATH=/repo/build/gamess
+
+    - echo "Running a test calculation"
+    - cd /repo/tests/validate_engine
     - mpiexec -n 1 csh -e ../../build/gamess/rungms TEST.inp 00 2 2 > TEST.log 2> TEST.err
 
 
@@ -135,10 +164,30 @@ engine_tests:
     - touch TEST-mdi.cube
     - touch TEST-mdi.grd
     - touch TEST-mdi.csv
+    - touch /repo/tests/scratch/userscr/TEST.casino
+    - touch /repo/tests/scratch/userscr/TEST.dmn
+    - touch /repo/tests/scratch/userscr/TEST.cim
+    - touch /repo/tests/scratch/userscr/TEST.cosmo
+    - touch /repo/tests/scratch/userscr/TEST.pot
+    - touch /repo/tests/scratch/userscr/TEST.gamma
+    - touch /repo/tests/scratch/userscr/TEST.efp
+    - touch /repo/tests/scratch/userscr/TEST.dip
+    - touch /repo/tests/scratch/userscr/TEST.hs1
+    - touch /repo/tests/scratch/userscr/TEST.hs2
+    - touch /repo/tests/scratch/userscr/TEST.dat
+    - touch /repo/tests/scratch/userscr/TEST.qmw
+    - touch /repo/tests/scratch/userscr/TEST.rst
+    - touch /repo/tests/scratch/userscr/TEST.trj
     - cd ../../
 
+    - cp /repo/build/gamess/install.info /install.info
+    - export GMSPATH=/repo/build/gamess
+
     - cd tests/validate_engine
-    - mpiexec -n 1 csh -e ../../build/gamess/rungms -mdi "${MDI_OPTIONS}" TEST.inp 00 2 2 > TEST.log 2> TEST.err
+    #- mpiexec -n 1 csh -e ../../build/gamess/rungms -mdi "${MDI_OPTIONS}" TEST.inp 00 2 2 > TEST.log 2> TEST.err
+    - export GAMESS_MDI_OPTIONS="${MDI_OPTIONS}"
+    - mpiexec -n 1 csh -e ../../build/gamess/rungms TEST.inp 00 2 2 > TEST.log 2> TEST.err
+
 
 test_drivers:
   mytest:
@@ -154,7 +203,57 @@ test_drivers:
 
 run_scripts:
 
+
+
+
   test:
+    containers:
+      container1:
+        image: 'mdi/gcmc'
+        script:
+          - echo "Insert commands to run an example calculation here"
+          - export USER=MDIMECHANIC
+          - |
+            if [ -d "tests/scratch" ] ; then
+              rm -r tests/scratch
+            fi
+          - mkdir -p tests/scratch
+          - mkdir -p tests/scratch/userscr
+
+          # These files are created to ensure that the rungms script doesn't return a non-zero exit code
+          - cd tests/scratch
+          - touch TEST-mdi.cube
+          - touch TEST-mdi.grd
+          - touch TEST-mdi.csv
+          - touch /repo/tests/scratch/userscr/TEST.casino
+          - touch /repo/tests/scratch/userscr/TEST.dmn
+          - touch /repo/tests/scratch/userscr/TEST.cim
+          - touch /repo/tests/scratch/userscr/TEST.cosmo
+          - touch /repo/tests/scratch/userscr/TEST.pot
+          - touch /repo/tests/scratch/userscr/TEST.gamma
+          - touch /repo/tests/scratch/userscr/TEST.efp
+          - touch /repo/tests/scratch/userscr/TEST.dip
+          - touch /repo/tests/scratch/userscr/TEST.hs1
+          - touch /repo/tests/scratch/userscr/TEST.hs2
+          - touch /repo/tests/scratch/userscr/TEST.dat
+          - touch /repo/tests/scratch/userscr/TEST.qmw
+          - touch /repo/tests/scratch/userscr/TEST.rst
+          - touch /repo/tests/scratch/userscr/TEST.trj
+          - cd ../../
+
+          - cp /repo/build/gamess/install.info /install.info
+          - export GMSPATH=/repo/build/gamess
+
+          - cd tests/validate_engine
+          - mpiexec -n 1 csh -e ../../build/gamess/rungms TEST.inp 00 2 2 > TEST.log 2> TEST.err
+
+
+
+
+
+
+
+  test_old:
     containers:
       container1:
         image: 'mdi/gcmc'
