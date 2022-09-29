@@ -346,13 +346,11 @@ run_scripts:
           - export GMSPATH=/repo/build/gamess
 
           - cd /repo/tests/gamess_lammps
-          - export GAMESS_MDI_OPTIONS="-method TCP -role ENGINE -name QM -hostname localhost -port 8021"
-          - mpiexec -n 1 csh -e ../../build/gamess/rungms TEST.inp 00 2 2 > TEST.log 2> TEST.err &
 
+          # Launch GAMESS
+          - mpiexec -n 1 csh -e ../../build/gamess/rungms TEST.inp 00 2 2 -mdi "-method TCP -role ENGINE -name QM -hostname localhost -port 8021" > TEST.log 2> TEST.err &
 
-          - ENGINE_EXECUTABLE="build/lammps/build/lmp_mdi"
-          - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/repo/build/lammps/src
-          #- cd /repo/tests/mdi_test
+          # Launch LAMMPS
           - ../../build/lammps/build/lmp_mdi -mdi "-method TCP -role DRIVER -name driver -port 8021" -in lammps.in > lammps.out
           - echo "Test output:"
           - cat lammps.out
