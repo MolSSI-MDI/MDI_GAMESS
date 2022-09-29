@@ -7,9 +7,15 @@ docker:
     # Install dependencies
     - apt-get update
     - apt-get install -y rsync csh wget groff curl git
+    - apt-get install -y git vim libblas-dev liblapack-dev nvidia-cuda-toolkit valgrind
 
-    - apt-get install -y patch wget nano make gcc gfortran cmake
+    - apt-get install -y patch nano make gcc gfortran cmake
+
     - pip install jinja2
+    - pip install cmake
+    - pip install pymdi
+    - pip install mpi4py
+    - pip install numpy
 
     # Install ftnchek
     - wget ftnchek-3.3.1.tar.gz https://www.dsm.fordham.edu/~ftnchek/download/ftnchek-3.3.1.tar.gz || true
@@ -66,35 +72,34 @@ docker:
     - make -j 1
 
     # Set path options in rungms
-    #- sed -i 's/set SCR=~\/gamess\/restart/set SCR=\/repo\/tests\/scratch/g' /repo/build/gamess/rungms
     - sed -i -z 's/set SCR=\n/set SCR=\/repo\/tests\/scratch\n/g' /repo/build/gamess/rungms
-    #- sed -i 's/set USERSCR=~\/gamess\/restart/set USERSCR=\/repo\/tests\/scratch\/userscr/g' /repo/build/gamess/rungms
     - sed -i -z 's/set USERSCR=\n/set USERSCR=\/repo\/tests\/scratch\/userscr\n/g' /repo/build/gamess/rungms
-    #- sed -i 's/set GMSPATH=~\/gamess/set GMSPATH=\/repo\/build\/gamess/g' /repo/build/gamess/rungms
     - sed -i -z 's/set GMSPATH=\n/set GMSPATH=\/repo\/build\/gamess\n/g' /repo/build/gamess/rungms
 
     # Set MPI options for rungms
     - sed -i -z 's/\nset TARGET=\n/\nset TARGET=mpi\n/g' /repo/build/gamess/rungms
     - sed -i 's/set DDI_MPI_CHOICE=impi/set DDI_MPI_CHOICE=mpich/g' /repo/build/gamess/rungms
 
-    # Run FTNCHEK to check for any errors in the MDI code
-    #- echo "=================== CHECKGMS OUTPUT ==================="
-    #- cd /repo/build/gamess/source
-    #- ftnchek -noextern -common=2 -arguments=1 -array=0 -calltree=0 -nocrossref -portability=tab -f77=automatic-array,relops,cycle-exit,case-construct modmdi.src
-    #- echo "======================================================="
-    #- cd /repo
+    # Obtain a clone of LAMMPS
+    - |
+      if [ ! -d "/repo/build/lammps" ]; then
+        git clone https://github.com/lammps/lammps.git /repo/build/lammps
+      fi
+    - LAMMPS_INSTALL='mpi'
 
-    # Run the tests
-    #- cd /repo/build/gamess
-    #- echo "Running serial tests"
-    #- tests/runtest.py -n 1 --folder travis-ci --skip_folder travis-ci/parallel --stderr
-    #- echo "Running parallel tests"
-    #- tests/runtest.py -n 2 --folder travis-ci/parallel --stderr
-    #- echo "Checking tests"
-    #- cd tests
-    #- ./checkgms.py
-    #- echo "Finished tests"
+    # Configure LAMMPS
+    - |
+      if [ ! -d "/repo/build/lammps/build" ]; then
+        mkdir -p /repo/build/lammps/build
+        cd /repo/build/lammps/build
+        cmake -D PKG_RIGID=yes -D PKG_MOLECULE=yes -D PKG_KSPACE=yes -D PKG_MDI=yes -D BUILD_SHARED_LIBS=yes -D LAMMPS_MACHINE=mpi -DCMAKE_BUILD_TYPE=Debug ../cmake
+      fi
 
+    # Compile LAMMPS
+    - cd /repo/build/lammps/build
+    - make -j 4
+    - cp lmp_mpi lmp_mdi
+    - cp liblammps_mpi.so liblammps.so
 
   validate_engine:
     - echo "Starting GAMESS validate_engine script"
@@ -209,7 +214,7 @@ run_scripts:
   test:
     containers:
       container1:
-        image: 'mdi/gcmc'
+        image: 'mdi/gamess'
         script:
           - echo "Insert commands to run an example calculation here"
           - export USER=MDIMECHANIC
@@ -249,6 +254,109 @@ run_scripts:
 
 
 
+  independent:
+    containers:
+      container1:
+        image: 'mdi/gamess'
+        script:
+          - echo "Insert commands to run an example calculation here"
+          - export USER=MDIMECHANIC
+          - |
+            if [ -d "tests/scratch" ] ; then
+              rm -r tests/scratch
+            fi
+          - mkdir -p tests/scratch
+          - mkdir -p tests/scratch/userscr
+
+          # These files are created to ensure that the rungms script doesn't return a non-zero exit code
+          - cd tests/scratch
+          - touch TEST-mdi.cube
+          - touch TEST-mdi.grd
+          - touch TEST-mdi.csv
+          - touch /repo/tests/scratch/userscr/TEST.casino
+          - touch /repo/tests/scratch/userscr/TEST.dmn
+          - touch /repo/tests/scratch/userscr/TEST.cim
+          - touch /repo/tests/scratch/userscr/TEST.cosmo
+          - touch /repo/tests/scratch/userscr/TEST.pot
+          - touch /repo/tests/scratch/userscr/TEST.gamma
+          - touch /repo/tests/scratch/userscr/TEST.efp
+          - touch /repo/tests/scratch/userscr/TEST.dip
+          - touch /repo/tests/scratch/userscr/TEST.hs1
+          - touch /repo/tests/scratch/userscr/TEST.hs2
+          - touch /repo/tests/scratch/userscr/TEST.dat
+          - touch /repo/tests/scratch/userscr/TEST.qmw
+          - touch /repo/tests/scratch/userscr/TEST.rst
+          - touch /repo/tests/scratch/userscr/TEST.trj
+          - cd ../../
+
+          - cp /repo/build/gamess/install.info /install.info
+          - export GMSPATH=/repo/build/gamess
+
+          - cd /repo/tests/gamess_lammps
+          - mpiexec -n 1 csh -e ../../build/gamess/rungms TEST.inp 00 2 2 > TEST.log 2> TEST.err
+
+
+          - ENGINE_EXECUTABLE="build/lammps/build/lmp_mdi"
+          - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/repo/build/lammps/src
+          - cd /repo/tests/engine_validation
+          - ../../${ENGINE_EXECUTABLE} -in lammps.in > lammps.out
+          - echo "Test output:"
+          - cat lammps.out
+
+
+
+
+
+  lammps:
+    containers:
+      container1:
+        image: 'mdi/gamess'
+        script:
+          - echo "Insert commands to run an example calculation here"
+          - export USER=MDIMECHANIC
+          - |
+            if [ -d "tests/scratch" ] ; then
+              rm -r tests/scratch
+            fi
+          - mkdir -p tests/scratch
+          - mkdir -p tests/scratch/userscr
+
+          # These files are created to ensure that the rungms script doesn't return a non-zero exit code
+          - cd tests/scratch
+          - touch TEST-mdi.cube
+          - touch TEST-mdi.grd
+          - touch TEST-mdi.csv
+          - touch /repo/tests/scratch/userscr/TEST.casino
+          - touch /repo/tests/scratch/userscr/TEST.dmn
+          - touch /repo/tests/scratch/userscr/TEST.cim
+          - touch /repo/tests/scratch/userscr/TEST.cosmo
+          - touch /repo/tests/scratch/userscr/TEST.pot
+          - touch /repo/tests/scratch/userscr/TEST.gamma
+          - touch /repo/tests/scratch/userscr/TEST.efp
+          - touch /repo/tests/scratch/userscr/TEST.dip
+          - touch /repo/tests/scratch/userscr/TEST.hs1
+          - touch /repo/tests/scratch/userscr/TEST.hs2
+          - touch /repo/tests/scratch/userscr/TEST.dat
+          - touch /repo/tests/scratch/userscr/TEST.qmw
+          - touch /repo/tests/scratch/userscr/TEST.rst
+          - touch /repo/tests/scratch/userscr/TEST.trj
+          - cd ../../
+
+          - cp /repo/build/gamess/install.info /install.info
+          - export GMSPATH=/repo/build/gamess
+
+          - cd /repo/tests/gamess_lammps
+          - export GAMESS_MDI_OPTIONS="-method TCP -role ENGINE -name QM -hostname localhost -port 8021"
+          - mpiexec -n 1 csh -e ../../build/gamess/rungms TEST.inp 00 2 2 > TEST.log 2> TEST.err &
+
+
+          - ENGINE_EXECUTABLE="build/lammps/build/lmp_mdi"
+          - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/repo/build/lammps/src
+          #- cd /repo/tests/mdi_test
+          - ../../build/lammps/build/lmp_mdi -mdi "-method TCP -role DRIVER -name driver -port 8021" -in lammps.in > lammps.out
+          - echo "Test output:"
+          - cat lammps.out
+
 
 
 
@@ -256,7 +364,7 @@ run_scripts:
   test_old:
     containers:
       container1:
-        image: 'mdi/gcmc'
+        image: 'mdi/gamess'
         script:
           - echo "Insert code that will confirm that your code has been built successfully"
           - export USER=MDIMECHANIC
