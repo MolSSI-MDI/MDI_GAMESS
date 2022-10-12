@@ -1,15 +1,22 @@
 code_name: 'GAMESS'
 docker:
-  image_name: 'mdi/gamess'
+  image_name: 'mdi/gamesseri'
 
 
   build_image:
     # Install dependencies
     - apt-get update
     - apt-get install -y rsync csh wget groff curl git
+    - apt-get install -y git vim libblas-dev liblapack-dev nvidia-cuda-toolkit valgrind
 
-    - apt-get install -y patch wget nano make gcc gfortran cmake
+    - apt-get install -y patch nano make gcc gfortran cmake
+
     - pip install jinja2
+    - pip install cmake
+    - pip install pymdi
+    - pip install mpi4py
+    - pip install numpy
+    - pip install pytest
 
     # Install ftnchek
     - wget ftnchek-3.3.1.tar.gz https://www.dsm.fordham.edu/~ftnchek/download/ftnchek-3.3.1.tar.gz || true
@@ -18,6 +25,10 @@ docker:
     - ./configure
     - make
     - make install
+
+    - echo 'deb [trusted=yes] https://developer.download.nvidia.com/hpc-sdk/ubuntu/amd64 /' | tee /etc/apt/sources.list.d/nvhpc.list
+    - apt-get update -y
+    - apt-get install -y nvhpc-22-7
 
   build_engine:
     # Copy GAMESS source files into the build directory
@@ -66,35 +77,32 @@ docker:
     - make -j 1
 
     # Set path options in rungms
-    #- sed -i 's/set SCR=~\/gamess\/restart/set SCR=\/repo\/tests\/scratch/g' /repo/build/gamess/rungms
     - sed -i -z 's/set SCR=\n/set SCR=\/repo\/tests\/scratch\n/g' /repo/build/gamess/rungms
-    #- sed -i 's/set USERSCR=~\/gamess\/restart/set USERSCR=\/repo\/tests\/scratch\/userscr/g' /repo/build/gamess/rungms
     - sed -i -z 's/set USERSCR=\n/set USERSCR=\/repo\/tests\/scratch\/userscr\n/g' /repo/build/gamess/rungms
-    #- sed -i 's/set GMSPATH=~\/gamess/set GMSPATH=\/repo\/build\/gamess/g' /repo/build/gamess/rungms
     - sed -i -z 's/set GMSPATH=\n/set GMSPATH=\/repo\/build\/gamess\n/g' /repo/build/gamess/rungms
 
     # Set MPI options for rungms
     - sed -i -z 's/\nset TARGET=\n/\nset TARGET=mpi\n/g' /repo/build/gamess/rungms
     - sed -i 's/set DDI_MPI_CHOICE=impi/set DDI_MPI_CHOICE=mpich/g' /repo/build/gamess/rungms
 
-    # Run FTNCHEK to check for any errors in the MDI code
-    #- echo "=================== CHECKGMS OUTPUT ==================="
-    #- cd /repo/build/gamess/source
-    #- ftnchek -noextern -common=2 -arguments=1 -array=0 -calltree=0 -nocrossref -portability=tab -f77=automatic-array,relops,cycle-exit,case-construct modmdi.src
-    #- echo "======================================================="
-    #- cd /repo
-
-    # Run the tests
-    #- cd /repo/build/gamess
-    #- echo "Running serial tests"
-    #- tests/runtest.py -n 1 --folder travis-ci --skip_folder travis-ci/parallel --stderr
-    #- echo "Running parallel tests"
-    #- tests/runtest.py -n 2 --folder travis-ci/parallel --stderr
-    #- echo "Checking tests"
-    #- cd tests
-    #- ./checkgms.py
-    #- echo "Finished tests"
-
+    # Obtain a clone of libERI
+    - |
+      if [ ! -d "/repo/build/gamess-libERI" ]; then
+        rsync -a /repo/source/gamess-libERI /repo/build
+        cd /repo/build/gamess-libERI
+    
+        # Ensure the line endings are lf
+        git rm --cached -r .
+        git reset --hard
+        cd ../../
+      fi
+    
+    - cd /repo/build/gamess-libERI
+    - rm -rf build
+    - mkdir build
+    - cd build
+    - cmake -DCMAKE_C_COMPILER=/opt/nvidia/hpc_sdk/Linux_x86_64/2022/compilers/bin/nvc -DCMAKE_CXX_COMPILER=/opt/nvidia/hpc_sdk/Linux_x86_64/2022/compilers/bin/nvc++ -DCMAKE_Fortran_COMPILER=/opt/nvidia/hpc_sdk/Linux_x86_64/2022/compilers/bin/nvfortran ..
+    - make -j 4 VERBOSE=1
 
   validate_engine:
     - echo "Starting GAMESS validate_engine script"
@@ -209,7 +217,7 @@ run_scripts:
   test:
     containers:
       container1:
-        image: 'mdi/gcmc'
+        image: 'mdi/gamesseri'
         script:
           - echo "Insert commands to run an example calculation here"
           - export USER=MDIMECHANIC
@@ -249,31 +257,4 @@ run_scripts:
 
 
 
-
-
-
-
-  test_old:
-    containers:
-      container1:
-        image: 'mdi/gcmc'
-        script:
-          - echo "Insert code that will confirm that your code has been built successfully"
-          - export USER=MDIMECHANIC
-          - |
-            if [ -d "tests/scratch" ] ; then
-              rm -r tests/scratch
-            fi
-          - mkdir -p tests/scratch
-          - mkdir -p tests/scratch/userscr
-
-          # These files are created to ensure that the rungms script doesn't return a non-zero exit code
-          - cd tests/scratch
-          - touch TEST-mdi.cube
-          - touch TEST-mdi.grd
-          - touch TEST-mdi.csv
-          - cd ../../
-
-          - cd tests/validate_engine
-          - mpiexec -n 1 csh -e ../../build/gamess/rungms TEST.inp 00 2 2 > TEST.log 2> TEST.err
 
