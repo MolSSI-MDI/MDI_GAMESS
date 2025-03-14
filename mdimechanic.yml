@@ -6,7 +6,7 @@ docker:
   build_image:
     # Install dependencies
     - apt-get update
-    - apt-get install -y rsync csh wget groff curl git
+    - apt-get install -y rsync csh wget groff curl git tcsh
     - apt-get install -y git vim libblas-dev liblapack-dev nvidia-cuda-toolkit valgrind
 
     - apt-get install -y patch nano make gcc gfortran cmake
@@ -48,14 +48,14 @@ docker:
 
     # Generate the Makefile
     - export builddir=$(pwd)
-    - echo "GMS_PATH = ${builddir}" > Makefile
-    - echo "GMS_VERSION = 00" >> Makefile
-    - echo "GMS_BUILD_PATH = ${builddir}" >> Makefile
-    - echo "GMS_FC = gfortran" >> Makefile
-    - echo "GMS_CC = gcc" >> Makefile
-    - echo "GMS_MDI = true" >> Makefile
+#    - echo "GMS_PATH = ${builddir}" >> Makefile
+#    - echo "GMS_VERSION = 00" >> Makefile
+#    - echo "GMS_BUILD_PATH = ${builddir}" >> Makefile
+#    - echo "GMS_FC = gfortran" >> Makefile
+#    - echo "GMS_CC = gcc" >> Makefile
+#    - echo "GMS_MDI = true" >> Makefile
     - export GMS_MDI=true
-    - echo 'include $(GMS_PATH)/Makefile.in' >> Makefile
+#    - echo 'include $(GMS_PATH)/Makefile.in' >> Makefile
 
     # Build LAPACK
     - ./tools/lapack/download-lapack.csh
@@ -72,34 +72,34 @@ docker:
     - make -j 1
 
     # Set path options in rungms
-    - sed -i -z 's/set SCR=\n/set SCR=\/repo\/tests\/scratch\n/g' /repo/build/gamess/rungms
-    - sed -i -z 's/set USERSCR=\n/set USERSCR=\/repo\/tests\/scratch\/userscr\n/g' /repo/build/gamess/rungms
-    - sed -i -z 's/set GMSPATH=\n/set GMSPATH=\/repo\/build\/gamess\n/g' /repo/build/gamess/rungms
+    - sed -i -z 's/set SCR=~\/gamess\/restart\n/set SCR=\/repo\/tests\/scratch\n/g' /repo/build/gamess/rungms
+    - sed -i -z 's/set USERSCR=~\/gamess\/restart\n/set USERSCR=\/repo\/tests\/scratch\/userscr\n/g' /repo/build/gamess/rungms
+    - sed -i -z 's/set GMSPATH=~\/gamess\n/set GMSPATH=\/repo\/build\/gamess\n/g' /repo/build/gamess/rungms
 
     # Set MPI options for rungms
-    - sed -i -z 's/\nset TARGET=\n/\nset TARGET=mpi\n/g' /repo/build/gamess/rungms
+    - sed -i -z 's/\nset TARGET=sockets\n/\nset TARGET=mpi\n/g' /repo/build/gamess/rungms
     - sed -i 's/set DDI_MPI_CHOICE=impi/set DDI_MPI_CHOICE=mpich/g' /repo/build/gamess/rungms
 
     # Obtain a clone of LAMMPS
-    - |
-      if [ ! -d "/repo/build/lammps" ]; then
-        git clone https://github.com/lammps/lammps.git /repo/build/lammps
-      fi
-    - LAMMPS_INSTALL='mpi'
+#    - |
+#      if [ ! -d "/repo/build/lammps" ]; then
+#        git clone https://github.com/lammps/lammps.git /repo/build/lammps
+#      fi
+#    - LAMMPS_INSTALL='mpi'
 
     # Configure LAMMPS
-    - |
-      if [ ! -d "/repo/build/lammps/build" ]; then
-        mkdir -p /repo/build/lammps/build
-        cd /repo/build/lammps/build
-        cmake -D PKG_RIGID=yes -D PKG_MOLECULE=yes -D PKG_KSPACE=yes -D PKG_MDI=yes -D BUILD_SHARED_LIBS=yes -D LAMMPS_MACHINE=mpi -DCMAKE_BUILD_TYPE=Debug ../cmake
-      fi
+#    - |
+#      if [ ! -d "/repo/build/lammps/build" ]; then
+#        mkdir -p /repo/build/lammps/build
+#        cd /repo/build/lammps/build
+#        cmake -D PKG_RIGID=yes -D PKG_MOLECULE=yes -D PKG_KSPACE=yes -D PKG_MDI=yes -D BUILD_SHARED_LIBS=yes -D LAMMPS_MACHINE=mpi -DCMAKE_BUILD_TYPE=Debug ../cmake
+#      fi
 
     # Compile LAMMPS
-    - cd /repo/build/lammps/build
-    - make -j 4
-    - cp lmp_mpi lmp_mdi
-    - cp liblammps_mpi.so liblammps.so
+#    - cd /repo/build/lammps/build
+#    - make -j 4
+#    - cp lmp_mpi lmp_mdi
+#    - cp liblammps_mpi.so liblammps.so
 
   validate_engine:
     - echo "Starting GAMESS validate_engine script"
@@ -135,13 +135,30 @@ docker:
     - touch /repo/tests/scratch/userscr/TEST.qmw
     - touch /repo/tests/scratch/userscr/TEST.rst
     - touch /repo/tests/scratch/userscr/TEST.trj
+    
+    #################################################
+    - export CASINO=""
+    - export CIMDMN=""
+    - export CIMFILE=""
+    - export COSDATA=""
+    - export COSPOT=""
+    - export GAMMA=""
+    - export MAKEFP=""
+    - export MDDIP=""
+    - export OPTHES1=""
+    - export OPTHES2=""
+    - export PUNCH=""
+    - export QMWAVE=""
+    - export RESTART=""
+    - export TRAJECT=""
+    #################################################
 
     - cp /repo/build/gamess/install.info /install.info
     - export GMSPATH=/repo/build/gamess
 
     - echo "Running a test calculation"
     - cd /repo/tests/validate_engine
-    - mpiexec -n 1 csh -e ../../build/gamess/rungms TEST.inp 00 2 2 > TEST.log 2> TEST.err
+    - mpiexec -n 1 tcsh -e ../../build/gamess/rungms TEST.inp 00 1 1 1 > TEST.log 2> TEST.err
 
 
 report:
@@ -185,13 +202,30 @@ engine_tests:
     - touch /repo/tests/scratch/userscr/TEST.trj
     - cd ../../
 
+    #################################################
+    - export CASINO=""
+    - export CIMDMN=""
+    - export CIMFILE=""
+    - export COSDATA=""
+    - export COSPOT=""
+    - export GAMMA=""
+    - export MAKEFP=""
+    - export MDDIP=""
+    - export OPTHES1=""
+    - export OPTHES2=""
+    - export PUNCH=""
+    - export QMWAVE=""
+    - export RESTART=""
+    - export TRAJECT=""
+    #################################################
+
     - cp /repo/build/gamess/install.info /install.info
     - export GMSPATH=/repo/build/gamess
 
     - cd tests/validate_engine
-    #- mpiexec -n 1 csh -e ../../build/gamess/rungms -mdi "${MDI_OPTIONS}" TEST.inp 00 2 2 > TEST.log 2> TEST.err
-    - export GAMESS_MDI_OPTIONS="${MDI_OPTIONS}"
-    - mpiexec -n 1 csh -e ../../build/gamess/rungms TEST.inp 00 2 2 > TEST.log 2> TEST.err
+    - mpiexec -n 1 tcsh -e ../../build/gamess/rungms -mdi "${MDI_OPTIONS}" TEST.inp 00 1 1 1 > TEST.log 2> TEST.err
+    #- export GAMESS_MDI_OPTIONS="${MDI_OPTIONS}"
+    #- mpiexec -n 1 tcsh -e ../../build/gamess/rungms TEST.inp 00 1 1 1 > TEST.log 2> TEST.err
 
 
 test_drivers:
