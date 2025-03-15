@@ -34,11 +34,11 @@ docker:
         cd build/gamess
     
         # Ensure the line endings are lf
-        git rm --cached -r .
-        git reset --hard
-        cd ../../
+        #git rm --cached -r .
+        #git reset --hard
+        #cd ../../
       fi
-    - cd build/gamess
+    - cd /repo/build/gamess
 
     # Prepare install.info
     - export GCC_MAJOR_VERSION=`gcc --version | grep ^gcc | sed 's/gcc (.*) //g' | grep -o '[0-9]\{1,3\}\.[0-9]\{0,3\}\.[0-9]\{0,3\}' | cut -d '.' -f 1`
