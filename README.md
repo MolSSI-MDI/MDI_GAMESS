@@ -68,8 +68,8 @@ Supported commands are indicated in green, while unsupported commands are indica
 | &lt;TOTCHARGE | ![command](report/badges/box-lightgray.svg) |
 | &lt;VELOCITIES | ![command](report/badges/box-lightgray.svg) |
 | &gt;+FORCES | ![command](report/badges/box-lightgray.svg) |
-| &gt;CELL | ![command](report/badges/box-lightgray.svg) |
-| &gt;CELL_DISPL | ![command](report/badges/box-lightgray.svg) |
+| &gt;CELL | ![command](report/badges/box-brightgreen.svg) |
+| &gt;CELL_DISPL | ![command](report/badges/box-brightgreen.svg) |
 | &gt;CHARGES | ![command](report/badges/box-lightgray.svg) |
 | &gt;COORDS | ![command](report/badges/box-brightgreen.svg) |
 | &gt;ELEC_MULT | ![command](report/badges/box-lightgray.svg) |
